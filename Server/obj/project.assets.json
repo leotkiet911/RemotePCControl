@@ -91,11 +91,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\Server\\Server.csproj",
+      "projectUniqueName": "D:\\RemotePCControl\\Server\\Server.csproj",
       "projectName": "Server",
-      "projectPath": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\Server\\Server.csproj",
+      "projectPath": "D:\\RemotePCControl\\Server\\Server.csproj",
       "packagesPath": "C:\\Users\\admin\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\Server\\obj\\",
+      "outputPath": "D:\\RemotePCControl\\Server\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -126,9 +126,9 @@
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "all"
+        "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -159,7 +159,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   },

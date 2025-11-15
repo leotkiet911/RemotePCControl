@@ -57,26 +57,41 @@ namespace RemotePCControl
         private void HandleClient(TcpClient tcpClient)
         {
             ConnectedClient client = new ConnectedClient(tcpClient);
-
-            lock (lockObj)
-            {
-                clients.Add(client);
-            }
-
+            lock (lockObj) { clients.Add(client); }
             Console.WriteLine($"[SERVER] New client connected from {client.RemoteEndPoint}");
 
             try
             {
                 NetworkStream stream = tcpClient.GetStream();
-                byte[] buffer = new byte[8192];
+                byte[] lengthBuffer = new byte[4]; // Buffer cho 4-byte độ dài
 
                 while (tcpClient.Connected)
                 {
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    if (bytesRead == 0) break;
+                    // 1. Đọc 4-byte độ dài
+                    int bytesRead = 0;
+                    while (bytesRead < 4)
+                    {
+                        int read = stream.Read(lengthBuffer, bytesRead, 4 - bytesRead);
+                        if (read == 0) throw new Exception("Client disconnected");
+                        bytesRead += read;
+                    }
 
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine($"[RECEIVED] {message}");
+                    int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
+
+                    // 2. Đọc chính xác độ dài tin nhắn
+                    byte[] messageBuffer = new byte[messageLength];
+                    bytesRead = 0;
+                    while (bytesRead < messageLength)
+                    {
+                        int read = stream.Read(messageBuffer, bytesRead, messageLength - bytesRead);
+                        if (read == 0) throw new Exception("Client disconnected");
+                        bytesRead += read;
+                    }
+
+                    string message = Encoding.UTF8.GetString(messageBuffer, 0, messageLength);
+
+                    // Chỉ in 100 ký tự đầu tiên để tránh làm treo console
+                    Console.WriteLine($"[RECEIVED] {message.Substring(0, Math.Min(message.Length, 100))}");
 
                     ProcessMessage(client, message, stream);
                 }
@@ -209,7 +224,13 @@ namespace RemotePCControl
             {
                 NetworkStream stream = targetClient.TcpClient.GetStream();
                 string message = $"EXECUTE|{command}|{parameters}";
+
                 byte[] data = Encoding.UTF8.GetBytes(message);
+                byte[] lengthPrefix = BitConverter.GetBytes(data.Length); // Lấy 4-byte độ dài
+
+                // 1. Gửi độ dài
+                stream.Write(lengthPrefix, 0, lengthPrefix.Length);
+                // 2. Gửi dữ liệu
                 stream.Write(data, 0, data.Length);
             }
             catch (Exception ex)
@@ -223,6 +244,11 @@ namespace RemotePCControl
             try
             {
                 byte[] data = Encoding.UTF8.GetBytes(response);
+                byte[] lengthPrefix = BitConverter.GetBytes(data.Length); // Lấy 4-byte độ dài
+
+                // 1. Gửi độ dài
+                stream.Write(lengthPrefix, 0, lengthPrefix.Length);
+                // 2. Gửi dữ liệu
                 stream.Write(data, 0, data.Length);
             }
             catch (Exception ex)
@@ -230,7 +256,6 @@ namespace RemotePCControl
                 Console.WriteLine($"[ERROR] Send response: {ex.Message}");
             }
         }
-
         public void Stop()
         {
             isRunning = false;

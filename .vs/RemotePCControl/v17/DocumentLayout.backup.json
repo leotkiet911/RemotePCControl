@@ -1,46 +1,46 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\",
+  "WorkspaceRootPath": "D:\\RemotePCControl\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\webinterface\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|solutionrelative:webinterface\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\webinterface\\hubs\\controlhub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|solutionrelative:webinterface\\hubs\\controlhub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\clientcontrolled\\clientcontrolled.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|solutionrelative:clientcontrolled\\clientcontrolled.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\clientcontrolled\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|solutionrelative:clientcontrolled\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\clientcontrolled\\form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|d:\\remotepccontrol\\clientcontrolled\\form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|solutionrelative:clientcontrolled\\form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\webinterface\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|solutionrelative:webinterface\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|d:\\remotepccontrol\\clientcontrolled\\clientcontrolled.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|solutionrelative:clientcontrolled\\clientcontrolled.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{269E26E1-28D6-4F11-A6E6-C4B229102335}|Server\\Server.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\server\\server.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{269E26E1-28D6-4F11-A6E6-C4B229102335}|Server\\Server.csproj|d:\\remotepccontrol\\server\\server.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{269E26E1-28D6-4F11-A6E6-C4B229102335}|Server\\Server.csproj|solutionrelative:server\\server.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\clientcontrolled\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|d:\\remotepccontrol\\webinterface\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|solutionrelative:webinterface\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|d:\\remotepccontrol\\webinterface\\hubs\\controlhub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|solutionrelative:webinterface\\hubs\\controlhub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|d:\\remotepccontrol\\webinterface\\services\\connectionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|solutionrelative:webinterface\\services\\connectionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|d:\\remotepccontrol\\clientcontrolled\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|solutionrelative:clientcontrolled\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\clientcontrolled\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|solutionrelative:clientcontrolled\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|d:\\remotepccontrol\\clientcontrolled\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|solutionrelative:clientcontrolled\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|c:\\users\\admin\\onedrive\\desktop\\remotepccontrol\\webinterface\\services\\connectionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|solutionrelative:webinterface\\services\\connectionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|d:\\remotepccontrol\\webinterface\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{22CE0BD1-1436-41C5-AE29-C199CE5B344E}|WebInterface\\WebInterface.csproj|solutionrelative:webinterface\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|D:\\RemotePCControl\\clientcontrolled\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{BBA802BE-CD3F-4423-95C3-761838CF0CA3}|ClientControlled\\ClientControlled.csproj|solutionrelative:clientcontrolled\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     }
   ],
   "DocumentGroupContainers": [
@@ -50,36 +50,32 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 11,
+          "SelectedChildIndex": 1,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
-            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "Form1.Designer.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\Form1.Designer.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\ClientControlled\\Form1.Designer.cs",
               "RelativeDocumentMoniker": "ClientControlled\\Form1.Designer.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\Form1.Designer.cs",
+              "ToolTip": "D:\\RemotePCControl\\ClientControlled\\Form1.Designer.cs",
               "RelativeToolTip": "ClientControlled\\Form1.Designer.cs",
-              "ViewState": "AgIAACwAAAAAAAAAAAAiwDUAAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAGIAAAAAAAAAAAAiwGwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T15:29:04.263Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "Form1.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\Form1.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\ClientControlled\\Form1.cs",
               "RelativeDocumentMoniker": "ClientControlled\\Form1.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\Form1.cs [Design]",
+              "ToolTip": "D:\\RemotePCControl\\ClientControlled\\Form1.cs [Design]",
               "RelativeToolTip": "ClientControlled\\Form1.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T14:45:23.206Z",
@@ -87,50 +83,50 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 6,
               "Title": "Form1.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\Form1.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\ClientControlled\\Form1.cs",
               "RelativeDocumentMoniker": "ClientControlled\\Form1.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\Form1.cs",
+              "ToolTip": "D:\\RemotePCControl\\ClientControlled\\Form1.cs",
               "RelativeToolTip": "ClientControlled\\Form1.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAA2wBUAAAA1AAAAAAAAAA==",
+              "ViewState": "AgIAABEAAAAAAAAAAAA2wBcAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T15:28:06.3Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 5,
               "Title": "ConnectionService.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\WebInterface\\Services\\ConnectionService.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\WebInterface\\Services\\ConnectionService.cs",
               "RelativeDocumentMoniker": "WebInterface\\Services\\ConnectionService.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\WebInterface\\Services\\ConnectionService.cs",
+              "ToolTip": "D:\\RemotePCControl\\WebInterface\\Services\\ConnectionService.cs",
               "RelativeToolTip": "WebInterface\\Services\\ConnectionService.cs",
-              "ViewState": "AgIAAG8AAAAAAAAAAAAowIkAAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAIUAAAAAAAAAAAA6wHkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T15:20:37.249Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "ControlHub.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\WebInterface\\Hubs\\ControlHub.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\WebInterface\\Hubs\\ControlHub.cs",
               "RelativeDocumentMoniker": "WebInterface\\Hubs\\ControlHub.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\WebInterface\\Hubs\\ControlHub.cs",
+              "ToolTip": "D:\\RemotePCControl\\WebInterface\\Hubs\\ControlHub.cs",
               "RelativeToolTip": "WebInterface\\Hubs\\ControlHub.cs",
-              "ViewState": "AgIAABEAAAAAAAAAAAA2wDEAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADEAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T15:13:01.751Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 3,
               "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\WebInterface\\Program.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\WebInterface\\Program.cs",
               "RelativeDocumentMoniker": "WebInterface\\Program.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\WebInterface\\Program.cs",
+              "ToolTip": "D:\\RemotePCControl\\WebInterface\\Program.cs",
               "RelativeToolTip": "WebInterface\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -139,24 +135,24 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 2,
               "Title": "Server.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\Server\\Server.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\Server\\Server.cs",
               "RelativeDocumentMoniker": "Server\\Server.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\Server\\Server.cs",
+              "ToolTip": "D:\\RemotePCControl\\Server\\Server.cs",
               "RelativeToolTip": "Server\\Server.cs",
-              "ViewState": "AgIAAA8BAAAAAAAAAAAzwAUAAAAhAAAAAAAAAA==",
+              "ViewState": "AgIAAG0AAAAAAAAAAABGwHgAAABKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T14:44:27.618Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\Program.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\ClientControlled\\Program.cs",
               "RelativeDocumentMoniker": "ClientControlled\\Program.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\Program.cs",
+              "ToolTip": "D:\\RemotePCControl\\ClientControlled\\Program.cs",
               "RelativeToolTip": "ClientControlled\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -165,26 +161,26 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "ClientControlled.cs",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\ClientControlled.cs",
+              "DocumentMoniker": "D:\\RemotePCControl\\ClientControlled\\ClientControlled.cs",
               "RelativeDocumentMoniker": "ClientControlled\\ClientControlled.cs",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\ClientControlled\\ClientControlled.cs",
+              "ToolTip": "D:\\RemotePCControl\\ClientControlled\\ClientControlled.cs",
               "RelativeToolTip": "ClientControlled\\ClientControlled.cs",
-              "ViewState": "AgIAAFUBAAAAAAAAAAA4wGIBAABLAAAAAAAAAA==",
+              "ViewState": "AgIAADYBAAAAAAAAAABCwEcBAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T14:51:48.877Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 8,
               "Title": "index.html",
-              "DocumentMoniker": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\WebInterface\\wwwroot\\index.html",
+              "DocumentMoniker": "D:\\RemotePCControl\\WebInterface\\wwwroot\\index.html",
               "RelativeDocumentMoniker": "WebInterface\\wwwroot\\index.html",
-              "ToolTip": "C:\\Users\\admin\\OneDrive\\Desktop\\RemotePCControl\\WebInterface\\wwwroot\\index.html",
+              "ToolTip": "D:\\RemotePCControl\\WebInterface\\wwwroot\\index.html",
               "RelativeToolTip": "WebInterface\\wwwroot\\index.html",
-              "ViewState": "AgIAAI0CAAAAAAAAAAAYwKUCAAAhAAAAAAAAAA==",
+              "ViewState": "AgIAAO8BAAAAAAAAAAAAAC4DAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
               "WhenOpened": "2025-11-14T14:51:04.043Z",
               "EditorCaption": ""

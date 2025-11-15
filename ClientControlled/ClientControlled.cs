@@ -96,17 +96,32 @@ namespace RemotePCControl
 
         private void ListenForCommands()
         {
-            byte[] buffer = new byte[8192];
+            byte[] lengthBuffer = new byte[4]; 
 
             while (isRunning && client.Connected)
             {
                 try
                 {
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    if (bytesRead == 0) break;
+                    int bytesRead = 0;
+                    while (bytesRead < 4)
+                    {
+                        int read = stream.Read(lengthBuffer, bytesRead, 4 - bytesRead);
+                        if (read == 0) throw new Exception("Server disconnected");
+                        bytesRead += read;
+                    }
+                    int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
 
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine($"[RECEIVED] {message}");
+                    byte[] messageBuffer = new byte[messageLength];
+                    bytesRead = 0;
+                    while (bytesRead < messageLength)
+                    {
+                        int read = stream.Read(messageBuffer, bytesRead, messageLength - bytesRead);
+                        if (read == 0) throw new Exception("Server disconnected");
+                        bytesRead += read;
+                    }
+
+                    string message = Encoding.UTF8.GetString(messageBuffer, 0, messageLength);
+                    Console.WriteLine($"[RECEIVED] {message.Substring(0, Math.Min(message.Length, 100))}"); 
 
                     ProcessCommand(message);
                 }
@@ -308,7 +323,36 @@ namespace RemotePCControl
                 if (videoDevices.Count == 0)
                     return "ERROR|No webcam found";
 
-                videoDevice = new VideoCaptureDevice(videoDevices[0].MonikerString);
+                //chose webcam device
+                FilterInfo chosenDevice = null;
+                Console.WriteLine("[AGENT] Auto-detecting best webcam...");
+
+                foreach (FilterInfo device in videoDevices)
+                {
+                    string nameLower = device.Name.ToLower();
+                    Console.WriteLine($"[AGENT] Found device: {device.Name}");
+
+                    //skip virtual/IR cameras
+                    if (nameLower.Contains("virtual") ||
+                        nameLower.Contains("ir") ||
+                        nameLower.Contains("intel(r) virtual") ||
+                        nameLower.Contains("hello"))
+                    {
+                        Console.WriteLine("[AGENT] -> Skipping (virtual/IR camera).");
+                        continue;
+                    }
+
+                    chosenDevice = device;
+                    Console.WriteLine($"[AGENT] -> SELECTED this device!");
+                    break;
+                }
+
+                if (chosenDevice == null)
+                {
+                    throw new Exception("No suitable (non-virtual, non-IR) webcam found.");
+                }
+
+                videoDevice = new VideoCaptureDevice(chosenDevice.MonikerString);
                 videoDevice.Start();
 
                 return "SUCCESS|Webcam started";
@@ -370,6 +414,9 @@ namespace RemotePCControl
             try
             {
                 byte[] data = Encoding.UTF8.GetBytes(message);
+                byte[] lengthPrefix = BitConverter.GetBytes(data.Length); 
+
+                stream.Write(lengthPrefix, 0, lengthPrefix.Length);
                 stream.Write(data, 0, data.Length);
             }
             catch (Exception ex)

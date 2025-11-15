@@ -76,18 +76,36 @@ namespace RemotePCControl.WebInterface.Services
         // Vòng lặp lắng nghe phản hồi từ Server Console
         private async Task ListenForResponses(string connectionId, NetworkStream stream)
         {
-            byte[] buffer = new byte[8192];
+            byte[] lengthBuffer = new byte[4]; // Buffer cho 4-byte độ dài
             try
             {
                 while (true)
                 {
-                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                    if (bytesRead == 0) break; // Ngắt kết nối
+                    // 1. Đọc 4-byte độ dài
+                    int bytesRead = 0;
+                    while (bytesRead < 4)
+                    {
+                        // Dùng ReadAsync thay vì Read
+                        int read = await stream.ReadAsync(lengthBuffer, bytesRead, 4 - bytesRead);
+                        if (read == 0) throw new Exception("Server disconnected");
+                        bytesRead += read;
+                    }
+                    int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
 
-                    string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    // 2. Đọc chính xác độ dài tin nhắn
+                    byte[] messageBuffer = new byte[messageLength];
+                    bytesRead = 0;
+                    while (bytesRead < messageLength)
+                    {
+                        // Dùng ReadAsync thay vì Read
+                        int read = await stream.ReadAsync(messageBuffer, bytesRead, messageLength - bytesRead);
+                        if (read == 0) throw new Exception("Server disconnected");
+                        bytesRead += read;
+                    }
+
+                    string response = Encoding.UTF8.GetString(messageBuffer, 0, messageLength);
 
                     // Lấy được phản hồi! Gửi nó về cho client JS
-                    // Server của bạn gửi: "RESPONSE|DATA...", chúng ta chỉ cần gửi "RESPONSE|DATA..."
                     await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveResponse", response);
                 }
             }
@@ -108,6 +126,11 @@ namespace RemotePCControl.WebInterface.Services
             try
             {
                 byte[] data = Encoding.UTF8.GetBytes(message);
+                byte[] lengthPrefix = BitConverter.GetBytes(data.Length); // Lấy 4-byte độ dài
+
+                // 1. Gửi độ dài
+                await stream.WriteAsync(lengthPrefix, 0, lengthPrefix.Length);
+                // 2. Gửi dữ liệu
                 await stream.WriteAsync(data, 0, data.Length);
             }
             catch (Exception ex)
