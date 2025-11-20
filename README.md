@@ -155,6 +155,36 @@ info: Microsoft.Hosting.Lifetime[14]
 4. Click **"Kết nối"**
 5. Sử dụng các tính năng!
 
+### 🌐 Dùng trên nhiều PC trong cùng LAN
+
+1. **Chạy Server trên máy trung tâm**  
+   - Khởi động `Server.exe` hoặc `dotnet run` trên máy sẽ đóng vai trò trung gian.  
+   - Dùng `ipconfig` để ghi lại địa chỉ IP LAN của máy này (ví dụ `192.168.1.50`).  
+   - Mở firewall/anti-virus cho phép inbound TCP port `8888`.
+
+2. **Cấu hình các máy bị điều khiển (ClientControlled)**  
+   - Mở file `ClientControlled/clientsettings.json` và đặt `ServerIp` thành IP của server ở bước 1.  
+   - Hoặc thiết lập biến môi trường để không phải sửa file khi deploy:
+     ```powershell
+     setx REMOTEPC_SERVER_IP 192.168.1.50
+     setx REMOTEPC_SERVER_PORT 8888
+     ```
+     (PowerShell hiện tại dùng ` $env:REMOTEPC_SERVER_IP = "192.168.1.50"` để áp dụng tức thì.)
+
+3. **Cấu hình Web Interface hoặc bất kỳ máy điều khiển nào**  
+   - Cập nhật `WebInterface/appsettings.json` → `ServerConnection:Host` = IP server.  
+   - Hoặc đặt biến môi trường chuẩn của ASP.NET Core:  
+     ```powershell
+     setx ServerConnection__Host 192.168.1.50
+     setx ServerConnection__Port 8888
+     ```
+   - Web Interface giờ sẽ tự lắng nghe `http://0.0.0.0:5000`, vì vậy các máy khác trong LAN có thể truy cập qua `http://<ip-may-chay-web>:5000`.
+
+4. **Kết nối**  
+   - Đảm bảo cả Server và Web Interface đang chạy.  
+   - Trên mỗi máy bị điều khiển khởi chạy `ClientControlled.exe`.  
+   - Từ bất kỳ trình duyệt nào trong LAN, truy cập `http://<ip-web>:5000`, đăng nhập bằng IP + Password mà ClientControlled hiển thị.
+
 ---
 
 ## 🎯 Hướng dẫn sử dụng Webcam Streaming

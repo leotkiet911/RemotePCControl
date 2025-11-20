@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using RemotePCControl.WebInterface.Hubs;
 using System.Net.Sockets;
 using System.Text;
@@ -8,12 +9,26 @@ namespace RemotePCControl.WebInterface.Services
     public class ConnectionService
     {
         private readonly IHubContext<ControlHub> _hubContext;
-        private Dictionary<string, TcpClient> _connections = new Dictionary<string, TcpClient>();
+        private readonly ServerConnectionOptions _options;
+        private readonly Dictionary<string, TcpClient> _connections = new Dictionary<string, TcpClient>();
         private readonly object _lock = new object();
 
-        public ConnectionService(IHubContext<ControlHub> hubContext)
+        public ConnectionService(
+            IHubContext<ControlHub> hubContext,
+            IOptions<ServerConnectionOptions> options)
         {
             _hubContext = hubContext;
+            _options = options.Value;
+
+            if (string.IsNullOrWhiteSpace(_options.Host))
+            {
+                _options.Host = "127.0.0.1";
+            }
+
+            if (_options.Port <= 0 || _options.Port > 65535)
+            {
+                _options.Port = 8888;
+            }
         }
 
         public async Task ProcessCommand(string connectionId, string command)
@@ -33,8 +48,8 @@ namespace RemotePCControl.WebInterface.Services
             {
                 try
                 {
-                    await tcpClient.ConnectAsync("127.0.0.1", 8888);
-                    Console.WriteLine($"[WEB] Connected to server: {connectionId}");
+                    await tcpClient.ConnectAsync(_options.Host, _options.Port);
+                    Console.WriteLine($"[WEB] Connected to server {_options.Host}:{_options.Port} for client {connectionId}");
 
                     _ = Task.Run(() => ListenToServer(connectionId, tcpClient));
                 }

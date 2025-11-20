@@ -33,6 +33,7 @@
             button1 = new Button();
             lblIp = new Label();
             lblPassword = new Label();
+            lblServer = new Label();
             flowLayoutPanel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -63,22 +64,34 @@
             button1.UseVisualStyleBackColor = true;
             // 
             // lblIp
-            // 
+            //
             lblIp.AutoSize = true;
-            lblIp.Location = new Point(206, 66);
+            lblIp.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            lblIp.Location = new Point(44, 66);
             lblIp.Name = "lblIp";
-            lblIp.Size = new Size(38, 15);
+            lblIp.Size = new Size(130, 19);
             lblIp.TabIndex = 2;
-            lblIp.Text = "label1";
-            // 
+            lblIp.Text = "IP Address: Pending";
+            //
             // lblPassword
-            // 
+            //
             lblPassword.AutoSize = true;
-            lblPassword.Location = new Point(492, 77);
+            lblPassword.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            lblPassword.Location = new Point(44, 95);
             lblPassword.Name = "lblPassword";
-            lblPassword.Size = new Size(38, 15);
+            lblPassword.Size = new Size(144, 19);
             lblPassword.TabIndex = 3;
-            lblPassword.Text = "label2";
+            lblPassword.Text = "Password: Generating";
+            //
+            // lblServer
+            //
+            lblServer.AutoSize = true;
+            lblServer.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            lblServer.Location = new Point(44, 37);
+            lblServer.Name = "lblServer";
+            lblServer.Size = new Size(132, 19);
+            lblServer.TabIndex = 4;
+            lblServer.Text = "Server: Not defined";
             // 
             // Form1
             // 
@@ -86,6 +99,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
             Controls.Add(lblPassword);
+            Controls.Add(lblServer);
             Controls.Add(lblIp);
             Controls.Add(groupBox1);
             Controls.Add(flowLayoutPanel1);
@@ -104,5 +118,6 @@
         private GroupBox groupBox1;
         private Label lblIp;
         private Label lblPassword;
+        private Label lblServer;
     }
 }

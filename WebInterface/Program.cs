@@ -1,10 +1,24 @@
+using RemotePCControl.WebInterface;
 using RemotePCControl.WebInterface.Services;
 using RemotePCControl.WebInterface.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var urlConfig = builder.Configuration.GetSection("WebHost")?.GetValue<string>("Urls");
+if (!string.IsNullOrWhiteSpace(urlConfig))
+{
+    var urls = urlConfig
+        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    if (urls.Length > 0)
+    {
+        builder.WebHost.UseUrls(urls);
+    }
+}
+
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.Configure<ServerConnectionOptions>(
+    builder.Configuration.GetSection(ServerConnectionOptions.SectionName));
 builder.Services.AddSingleton<ConnectionService>();
 builder.Services.AddSignalR();
 var app = builder.Build();
