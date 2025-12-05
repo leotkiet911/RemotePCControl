@@ -1,7 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Net;
+using System.Net.Sockets;
+
 
 namespace BuildProject;
 
@@ -23,29 +28,50 @@ internal static class Program
             string solutionRoot = FindSolutionRoot();
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             string repoShortcutFolder = Path.Combine(solutionRoot, "Shortcuts");
+            string ipAddress = GetLocalIpAddress();
+
+            RunCmd($"setx REMOTEPC_SERVER_IP {ipAddress}");
+            RunCmd("setx REMOTEPC_SERVER_PORT 8888");
+            RunCmd($"setx ServerConnection__Host {ipAddress}");
+            RunCmd("setx ServerConnection__Port 8888");
 
             Directory.CreateDirectory(repoShortcutFolder);
 
             Console.WriteLine("╔══════════════════════════════════════════════════════╗");
-            Console.WriteLine("║        RemotePCControl Shortcut Builder              ║");
+            Console.WriteLine("║    RemotePCControl Auto Build & Shortcut Builder     ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════╝");
             Console.WriteLine($"Solution root : {solutionRoot}");
             Console.WriteLine($"Desktop       : {desktopPath}");
+            Console.WriteLine($"IP Address    : {ipAddress}");
             Console.WriteLine();
 
             foreach (var target in Targets)
             {
-                string exePath = LocateExecutable(solutionRoot, target);
-                Console.WriteLine($"[FOUND] {target.Name} => {exePath}");
+                Console.WriteLine($"[PROCESSING] {target.Name}...");
+                
+                // Build and publish project
+                string publishPath = BuildAndPublishProject(solutionRoot, target);
+                
+                // find executable in publish folder
+                string exePath = Path.Combine(publishPath, target.ExecutableName);
+                
+                if (!File.Exists(exePath))
+                {
+                    throw new FileNotFoundException($"Không tìm thấy {target.ExecutableName} sau khi publish tại {publishPath}");
+                }
 
+                Console.WriteLine($"[FOUND] {exePath}");
+
+                // create shortcuts
                 CreateShortcut(repoShortcutFolder, target.Name, exePath);
                 CreateShortcut(desktopPath, target.Name, exePath);
+                
+                Console.WriteLine();
             }
 
-            Console.WriteLine();
-            Console.WriteLine("[DONE] Shortcuts created both in:");
-            Console.WriteLine($"       • {repoShortcutFolder}");
-            Console.WriteLine($"       • {desktopPath}");
+            Console.WriteLine("[DONE] All projects have been built, published and shortcuts created!");
+            Console.WriteLine($"       • Shortcuts at: {repoShortcutFolder}");
+            Console.WriteLine($"       • Shortcuts at: {desktopPath}");
         }
         catch (Exception ex)
         {
@@ -53,6 +79,59 @@ internal static class Program
             Environment.ExitCode = 1;
         }
     }
+
+    public static void RunCmd(string command)
+    {
+        var process = new System.Diagnostics.Process();
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "cmd.exe",
+            Arguments = "/C " + command,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        process.StartInfo = startInfo;
+        process.Start();
+        process.WaitForExit();
+    }
+
+
+    public static string GetLocalIpAddress()
+    {
+        foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (ni.OperationalStatus != OperationalStatus.Up)
+                continue;
+
+            // CHỈ CHO PHÉP CARD THẬT
+            if (ni.NetworkInterfaceType != NetworkInterfaceType.Wireless80211 &&
+                ni.NetworkInterfaceType != NetworkInterfaceType.Ethernet)
+            {
+                continue; // Bỏ VMware, VirtualBox, Hyper-V, Bluetooth, Loopback...
+            }
+
+            var props = ni.GetIPProperties();
+
+            // ƯU TIÊN CARD CÓ GATEWAY (NGHĨA LÀ CARD ĐANG DÙNG INTERNET)
+            if (props.GatewayAddresses.Count == 0)
+                continue;
+
+            foreach (var addr in props.UnicastAddresses)
+            {
+                if (addr.Address.AddressFamily == AddressFamily.InterNetwork &&
+                    !IPAddress.IsLoopback(addr.Address))
+                {
+                    return addr.Address.ToString();
+                }
+            }
+        }
+
+        return "";
+    }
+
 
     private static string FindSolutionRoot()
     {
@@ -66,27 +145,59 @@ internal static class Program
             current = current.Parent;
         }
 
-        throw new InvalidOperationException("Không tìm thấy file RemotePCControl.sln khi dò lên trên.");
+        throw new InvalidOperationException("Cannot find RemotePCControl.sln file when searching up.");
     }
 
-    private static string LocateExecutable(string solutionRoot, ShortcutDefinition definition)
+    private static string BuildAndPublishProject(string solutionRoot, ShortcutDefinition definition)
     {
-        string binFolder = Path.Combine(solutionRoot, definition.ProjectFolder, "bin");
-        if (!Directory.Exists(binFolder))
+        string projectPath = Path.Combine(solutionRoot, definition.ProjectFolder);
+        string publishPath = Path.Combine(projectPath, "bin", "publish");
+
+        Console.WriteLine($"  → Building project: {definition.ProjectFolder}");
+
+        // Tìm file .csproj
+        string? csprojFile = Directory.GetFiles(projectPath, "*.csproj").FirstOrDefault();
+        if (csprojFile == null)
         {
-            throw new FileNotFoundException($"Chưa build project {definition.ProjectFolder}. Không thấy thư mục bin.");
+            throw new FileNotFoundException($"Cannot find .csproj file in {projectPath}");
         }
 
-        string? exePath = Directory.EnumerateFiles(binFolder, definition.ExecutableName, SearchOption.AllDirectories)
-            .OrderByDescending(File.GetLastWriteTimeUtc)
-            .FirstOrDefault();
-
-        if (exePath == null)
+        // delete old publish folder if it exists
+        if (Directory.Exists(publishPath))
         {
-            throw new FileNotFoundException($"Không tìm thấy {definition.ExecutableName} trong {binFolder}. Hãy build project tương ứng trước.");
+            Directory.Delete(publishPath, true);
         }
 
-        return exePath;
+        // run dotnet publish
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = $"publish \"{csprojFile}\" -c Release -o \"{publishPath}\" --self-contained false",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = Process.Start(startInfo);
+        if (process == null)
+        {
+            throw new InvalidOperationException("Cannot start dotnet process");
+        }
+
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
+        {
+            Console.WriteLine(output);
+            Console.WriteLine(error);
+            throw new InvalidOperationException($"Build/Publish failed for {definition.ProjectFolder} (Exit code: {process.ExitCode})");
+        }
+
+        Console.WriteLine($"  ✓ Published to: {publishPath}");
+        return publishPath;
     }
 
     private static void CreateShortcut(string folder, string shortcutName, string targetPath)
@@ -94,10 +205,10 @@ internal static class Program
         string shortcutPath = Path.Combine(folder, $"{shortcutName}.lnk");
 
         var shellType = Type.GetTypeFromProgID("WScript.Shell")
-            ?? throw new InvalidOperationException("Không thể khởi tạo WScript.Shell (COM). Đảm bảo chạy trên Windows.");
+            ?? throw new InvalidOperationException("Cannot create WScript.Shell (COM). Ensure running on Windows.");
 
         dynamic shell = Activator.CreateInstance(shellType)
-            ?? throw new InvalidOperationException("Không thể tạo instance WScript.Shell.");
+            ?? throw new InvalidOperationException("Cannot create WScript.Shell instance.");
 
         dynamic shortcut = shell.CreateShortcut(shortcutPath);
         shortcut.TargetPath = targetPath;
@@ -106,8 +217,6 @@ internal static class Program
         shortcut.WindowStyle = 1;
         shortcut.Save();
 
-        Console.WriteLine($"[CREATE] {shortcutPath}");
+        Console.WriteLine($"  [SHORTCUT] {shortcutPath}");
     }
 }
-
-

@@ -74,20 +74,12 @@ cd WebInterface
 # Dependencies đã được cấu hình trong csproj
 ```
 
-### Bước 3: Build tất cả projects
+### Bước 3: sử dụng BuildProject để build, public và tạo các shortcut để chạy project
 
 ```bash
 # Build Server
-cd Server
-dotnet build
-
-# Build ClientControlled
-cd ../ClientControlled
-dotnet build
-
-# Build WebInterface
-cd ../WebInterface
-dotnet build
+cd BuildProject
+dotnet run
 ```
 
 ---
@@ -102,6 +94,8 @@ dotnet run
 ```
 
 Hoặc chạy file `Server.exe` trong `bin/Debug/net8.0/`
+
+Hoặc chạy shortcut được tạo ra ở `Desktop` hoặc trong folder `Shortcuts`
 
 **Kết quả:**
 ```
@@ -124,6 +118,8 @@ dotnet run
 
 Hoặc chạy file `ClientControlled.exe`
 
+Hoặc chạy shortcut được tạo ra ở `Desktop` hoặc trong folder `Shortcuts`
+
 **Kết quả:**
 ```
 [CLIENT] Connected to server
@@ -140,6 +136,8 @@ cd WebInterface
 dotnet run
 ```
 
+Hoặc chạy shortcut được tạo ra ở `Desktop` hoặc trong folder `Shortcuts`
+
 **Kết quả:**
 ```
 info: Microsoft.Hosting.Lifetime[14]
@@ -149,72 +147,11 @@ info: Microsoft.Hosting.Lifetime[14]
 
 ### Step 4: Truy cập Web và điều khiển
 
-1. Mở browser: `https://localhost:7001`
+1. Mở browser: `https://localhost:7001` (ip này có hiển thị trên cửa sổ console của WebInterface)
 2. Chọn **"Người điều khiển"**
 3. Nhập **IP** và **Password** từ ClientControlled
 4. Click **"Kết nối"**
 5. Sử dụng các tính năng!
-
-### Step 5 (tuỳ chọn): Tạo shortcut chạy nhanh
-
-```bash
-dotnet run --project BuildProject
-```
-
-Lệnh này sẽ tìm những file `.exe` mới build nhất, tạo thư mục `Shortcuts/` trong repo, đồng thời sao chép 3 shortcut (Server, ClientControlled, WebInterface) lên Desktop của máy hiện tại để bạn bật/tắt nhanh chóng.
-
----
-
-## 🖧 Thiết lập máy chủ duy nhất (Server + WebInterface cùng máy)
-
-1. **Chuẩn bị máy chủ**
-   - `dotnet run --project Server` (hoặc chạy `Server.exe`) để mở cổng 8888.  
-   - `dotnet run --project WebInterface` để mở giao diện web trên `http://0.0.0.0:5000`.  
-   - Mở firewall cho TCP 5000 (trình duyệt truy cập) và TCP 8888 (các máy ClientControlled kết nối).
-   - (Tuỳ chọn) Chạy `dotnet run --project BuildProject` để tạo shortcut ra Desktop.
-
-2. **Cấu hình ứng dụng WebInterface**
-   - Trong `WebInterface/appsettings.json`, đặt `ServerConnection:Host` là **IP LAN của máy chủ** (ví dụ `192.168.21.131`).  
-   - Khi chạy, ConnectionService sẽ dùng thông tin này để mở socket tới Server.
-
-3. **Máy bị điều khiển (ClientControlled)**
-   - Trong `ClientControlled/clientsettings.json` (hoặc biến môi trường `REMOTEPC_SERVER_IP`), nhập IP của máy chủ.  
-   - Chạy `ClientControlled.exe` trên từng máy cần bị điều khiển → ghi lại IP + Password hiển thị.
-
-4. **Máy điều khiển thứ 3**
-   - Mở trình duyệt → `http://<IP-máy-chủ>:5000`.  
-   - Đăng nhập bằng IP + Password của máy bị điều khiển.  
-   - Khi gửi lệnh, Server console sẽ log `[SESSION] Controller logged in...` nếu socket đã nối thành công.
-
-### 🌐 Dùng trên nhiều PC trong cùng LAN
-
-1. **Chạy Server trên máy trung tâm**  
-   - Khởi động `Server.exe` hoặc `dotnet run` trên máy sẽ đóng vai trò trung gian.  
-   - Dùng `ipconfig` để ghi lại địa chỉ IP LAN của máy này (ví dụ `192.168.1.50`).  
-   - Mở firewall/anti-virus cho phép inbound TCP port `8888`.
-
-2. **Cấu hình các máy bị điều khiển (ClientControlled)**  
-   - Mở file `ClientControlled/clientsettings.json` và đặt `ServerIp` thành IP của server ở bước 1.  
-   - Hoặc thiết lập biến môi trường để không phải sửa file khi deploy:
-     ```powershell
-     setx REMOTEPC_SERVER_IP 192.168.1.50
-     setx REMOTEPC_SERVER_PORT 8888
-     ```
-     (PowerShell hiện tại dùng ` $env:REMOTEPC_SERVER_IP = "192.168.1.50"` để áp dụng tức thì.)
-
-3. **Cấu hình Web Interface hoặc bất kỳ máy điều khiển nào**  
-   - Cập nhật `WebInterface/appsettings.json` → `ServerConnection:Host` = IP server.  
-   - Hoặc đặt biến môi trường chuẩn của ASP.NET Core:  
-     ```powershell
-     setx ServerConnection__Host 192.168.1.50
-     setx ServerConnection__Port 8888
-     ```
-   - Web Interface giờ sẽ tự lắng nghe `http://0.0.0.0:5000`, vì vậy các máy khác trong LAN có thể truy cập qua `http://<ip-may-chay-web>:5000`.
-
-4. **Kết nối**  
-   - Đảm bảo cả Server và Web Interface đang chạy.  
-   - Trên mỗi máy bị điều khiển khởi chạy `ClientControlled.exe`.  
-   - Từ bất kỳ trình duyệt nào trong LAN, truy cập `http://<ip-web>:5000`, đăng nhập bằng IP + Password mà ClientControlled hiển thị.
 
 ---
 

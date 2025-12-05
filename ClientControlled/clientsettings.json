@@ -1,5 +1,4 @@
 {
-  "ServerIp": "127.0.0.1",
+  "ServerIp": "192.168.224.1",
   "ServerPort": 8888
 }
-

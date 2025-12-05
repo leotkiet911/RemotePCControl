@@ -4,16 +4,13 @@ using RemotePCControl.WebInterface.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var urlConfig = builder.Configuration.GetSection("WebHost")?.GetValue<string>("Urls");
-if (!string.IsNullOrWhiteSpace(urlConfig))
+string serverIp = Environment.GetEnvironmentVariable("REMOTEPC_SERVER_IP");
+
+if (!string.IsNullOrWhiteSpace(serverIp))
 {
-    var urls = urlConfig
-        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-    if (urls.Length > 0)
-    {
-        builder.WebHost.UseUrls(urls);
-    }
+    builder.WebHost.UseUrls($"http://{serverIp}:5000");
 }
+
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -27,7 +24,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
