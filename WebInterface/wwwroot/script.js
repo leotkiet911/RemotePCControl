@@ -65,6 +65,8 @@ function handleResponse(response) {
             if (!data.includes('Webcam') && !data.includes('streaming')) {
                 alert('✅ ' + data);
             }
+            document.getElementById('loginSection').classList.remove('active');
+            document.getElementById('controlPanel').classList.add('active');
             break;
         case 'FAILED':
             alert('❌ ' + data);
@@ -254,10 +256,9 @@ async function login() {
     if (connection && connection.state === "Connected") {
         targetIp = ip;
         document.getElementById('connectedIp').textContent = 'Đang điều khiển: ' + ip;
-        document.getElementById('loginSection').classList.remove('active');
-        document.getElementById('controlPanel').classList.add('active');
         sendCommand("LOGIN", password);
     }
+   
 }
 
 function disconnect() {

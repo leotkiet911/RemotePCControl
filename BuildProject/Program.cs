@@ -111,7 +111,7 @@ internal static class Program
     }
 
 
-    public static string GetLocalIpAddress()
+   public static string GetLocalIpAddress()
     {
         foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
         {
@@ -122,12 +122,22 @@ internal static class Program
             if (ni.NetworkInterfaceType != NetworkInterfaceType.Wireless80211 &&
                 ni.NetworkInterfaceType != NetworkInterfaceType.Ethernet)
             {
-                continue; // Bỏ VMware, VirtualBox, Hyper-V, Bluetooth, Loopback...
+                continue;
             }
+
+            // BỎ QUA CÁC CARD VPN (Radmin, Hamachi, v.v.)
+            string name = ni.Name.ToLower();
+            string desc = ni.Description.ToLower();
+
+            if (name.Contains("radmin") || desc.Contains("radmin"))
+                continue;
+
+            if (name.Contains("vpn") || desc.Contains("vpn"))
+                continue;
 
             var props = ni.GetIPProperties();
 
-            // ƯU TIÊN CARD CÓ GATEWAY (NGHĨA LÀ CARD ĐANG DÙNG INTERNET)
+            // ƯU TIÊN CARD CÓ GATEWAY (card đang dùng internet)
             if (props.GatewayAddresses.Count == 0)
                 continue;
 
@@ -143,6 +153,7 @@ internal static class Program
 
         return "";
     }
+
 
     private static void SaveServerInfo(string solutionRoot, ServerInfo info)
     {
