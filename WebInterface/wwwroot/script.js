@@ -63,13 +63,14 @@ function handleResponse(response) {
     switch (responseType) {
         case 'SUCCESS':
             if (!data.includes('Webcam') && !data.includes('streaming')) {
-                alert('✅ ' + data);
+                 document.getElementById('loginError').textContent = "";
             }
             document.getElementById('loginSection').classList.remove('active');
             document.getElementById('controlPanel').classList.add('active');
             break;
         case 'FAILED':
-            alert('❌ ' + data);
+            document.getElementById('loginError').textContent = "Sai tài khoản hoặc mật khẩu!";
+            document.getElementById('loginError').style.display = "block";
             break;
         case 'ERROR':
             alert('⚠️ Lỗi: ' + data);
@@ -247,9 +248,10 @@ async function login() {
     const password = document.getElementById('loginPassword').value;
 
     if (!ip || !password) {
-        alert('Vui lòng nhập đầy đủ thông tin!');
-        return;
-    }
+    document.getElementById('loginError').textContent = "Vui lòng nhập đầy đủ thông tin!";
+    return;
+}
+
 
     await setupSignalR();
 

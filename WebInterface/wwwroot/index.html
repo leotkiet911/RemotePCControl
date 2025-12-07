@@ -60,6 +60,7 @@
 
             <div id="loginSection" class="form-section">
                 <h3 style="margin-bottom: 20px;">🔐 Đăng nhập để điều khiển</h3>
+                <div id="loginError" class="error-message"></div>
                 <div class="input-group">
                     <label>Tài khoản (IP Address)</label>
                     <input type="text" id="loginIp" placeholder="192.168.1.100" value="127.0.0.1">
@@ -71,6 +72,7 @@
                 <button class="btn btn-primary" onclick="login()">Kết nối</button>
                 <button class="btn btn-secondary" onclick="selectMode(null)">← Quay lại</button>
             </div>
+           
 
             <div id="controlPanel" class="control-panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
