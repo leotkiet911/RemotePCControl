@@ -5,76 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote PC Control - HCMUS</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🖥️ Remote PC Control v2.0</h1>
-            <p>HCMUS - Socket Programming Project | Real-time Webcam Streaming</p>
+    <!-- Particle Background -->
+    <div id="particle-background"></div>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-text">3AESieuNhan<span class="logo-dot">.</span></span>
+            </div>
+            <div class="menu-toggle" onclick="toggleMenu()">
+                <span class="menu-text">MENU</span>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <!-- Menu Dropdown -->
+            <div class="menu-dropdown" id="menuDropdown">
+                <div class="menu-header">
+                    <span>📋 Các tính năng điều khiển</span>
+                </div>
+                <div class="menu-item" onclick="navigateToTask('apps')">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>📱 Quản lý Apps</span>
+                </div>
+                <div class="menu-item" onclick="navigateToTask('processes')">
+                    <i class="fas fa-cog"></i>
+                    <span>⚙️ Quản lý Processes</span>
+                </div>
+                <div class="menu-item" onclick="navigateToTask('screen')">
+                    <i class="fas fa-camera"></i>
+                    <span>📸 Chụp màn hình</span>
+                </div>
+                <div class="menu-item" onclick="navigateToTask('keylog')">
+                    <i class="fas fa-keyboard"></i>
+                    <span>⌨️ Keylogger</span>
+                </div>
+                <div class="menu-item" onclick="navigateToTask('webcam')">
+                    <i class="fas fa-video"></i>
+                    <span>📹 Webcam</span>
+                </div>
+                <div class="menu-item" onclick="navigateToTask('system')">
+                    <i class="fas fa-power-off"></i>
+                    <span>🔋 Điều khiển hệ thống</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <p class="welcome-text">WELCOME TO REMOTE PC CONTROL</p>
+                <h1 class="main-headline">3AESieuNhan - Remote PC Control</h1>
+                <h3 class="main-headline">Choose your role</h3>
+                <div class="hero-buttons">
+                    <button class="hero-btn" onclick="selectMode('controlled')">PC Bị điều khiển</button>
+                    <button class="hero-btn" onclick="selectMode('controller')">PC điều khiển</button>
+                </div>
+            </div>
         </div>
 
-        <div class="content">
-            <div id="modeSelection" class="mode-selection">
-                    <div class="mode-card" onclick="selectMode('controlled')">
-                        <div class="icon">💻</div>
-                        <h3>PC bị điều khiển</h3>
-                        <p>Tự tải & chạy ClientControlled</p>
+        <!-- Vines decoration -->
+        <div class="vines-decoration"></div>
+
+        <!-- Social Media Icons -->
+        <div class="social-icons">
+            <a href="https://github.com/leotkiet911/RemotePCControl" class="social-icon"><i class="fab fa-github"></i></a>
+        </div>
+    </section>
+
+    <!-- Content Sections (Hidden by default) -->
+    <div class="content-overlay" id="contentOverlay">
+        <div class="content-container">
+            <!-- Controlled Section -->
+            <div id="controlledSection" class="form-section">
+                <button class="close-btn" onclick="selectMode(null)">×</button>
+                <h3 style="margin-bottom: 16px; color: white;">💻 Cài đặt máy bị điều khiển</h3>
+                <div id="serverInfoCard" class="info-card">
+                    <div>
+                        <p class="muted">Server</p>
+                        <h4 id="serverEndpoint" style="color: white;">Đang tải thông tin server...</h4>
                     </div>
-                    <div class="mode-card" onclick="selectMode('controller')">
-                        <div class="icon">🎮</div>
-                        <h3>Người điều khiển</h3>
-                        <p>Điều khiển một máy tính từ xa</p>
+                    <button class="btn-download" onclick="downloadClientPackage()">⬇️ Tải gói ClientControlled</button>
+                </div>
+                <div class="info-card">
+                    <ol class="steps">
+                        <li>Tải file <b>client-controlled.zip</b> và giải nén.</li>
+                        <li>Chạy <code>ClientControlled.exe</code> trong thư mục giải nén.</li>
+                        <li>Sau khi chạy, IP &amp; Password sẽ hiển thị tại đây và trên cửa sổ app.</li>
+                    </ol>
+                </div>
+                <div class="info-card">
+                    <div class="card-header">
+                        <div>
+                            <p class="muted">Trạng thái</p>
+                            <h4 style="color: white;">Danh sách máy đã đăng ký</h4>
+                        </div>
+                        <button class="btn-primary small" onclick="refreshSessions()">🔄 Làm mới</button>
                     </div>
+                    <div id="sessionList" class="session-list">Chưa có máy kết nối.</div>
+                </div>
             </div>
 
-                <div id="controlledSection" class="form-section">
-                    <h3 style="margin-bottom: 16px;">💻 Cài đặt máy bị điều khiển</h3>
-                    <div id="serverInfoCard" class="info-card">
-                        <div>
-                            <p class="muted">Server</p>
-                            <h4 id="serverEndpoint">Đang tải thông tin server...</h4>
-                        </div>
-                        <button class="btn-download" onclick="downloadClientPackage()">⬇️ Tải gói ClientControlled</button>
-                    </div>
-                    <div class="info-card">
-                        <ol class="steps">
-                            <li>Tải file <b>client-controlled.zip</b> và giải nén.</li>
-                            <li>Chạy <code>ClientControlled.exe</code> trong thư mục giải nén.</li>
-                            <li>Sau khi chạy, IP &amp; Password sẽ hiển thị tại đây và trên cửa sổ app.</li>
-                        </ol>
-                    </div>
-                    <div class="info-card">
-                        <div class="card-header">
-                            <div>
-                                <p class="muted">Trạng thái</p>
-                                <h4>Danh sách máy đã đăng ký</h4>
-                            </div>
-                            <button class="btn-primary small" onclick="refreshSessions()">🔄 Làm mới</button>
-                        </div>
-                        <div id="sessionList" class="session-list">Chưa có máy kết nối.</div>
-                    </div>
-                    <button class="btn-secondary" style="margin-top: 12px;" onclick="selectMode(null)">← Quay lại</button>
-                </div>
-
+            <!-- Login Section -->
             <div id="loginSection" class="form-section">
-                <h3 style="margin-bottom: 20px;">🔐 Đăng nhập để điều khiển</h3>
+                <button class="close-btn" onclick="selectMode(null)">×</button>
+                <h3 style="margin-bottom: 20px; color: white;">🔐 Đăng nhập để điều khiển</h3>
                 <div class="input-group">
-                    <label>Tài khoản (IP Address)</label>
+                    <label style="color: white;">Tài khoản (IP Address)</label>
                     <input type="text" id="loginIp" placeholder="192.168.1.100" value="127.0.0.1">
                 </div>
                 <div class="input-group">
-                    <label>Mật khẩu</label>
+                    <label style="color: white;">Mật khẩu</label>
                     <input type="password" id="loginPassword" placeholder="Nhập mật khẩu 6 số">
                 </div>
                 <button class="btn btn-primary" onclick="login()">Kết nối</button>
-                <button class="btn btn-secondary" onclick="selectMode(null)">← Quay lại</button>
             </div>
 
+            <!-- Control Panel -->
             <div id="controlPanel" class="control-panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <h3 style="display: flex; align-items: center;">
+                    <h3 style="display: flex; align-items: center; color: white;">
                         <span class="status-indicator status-connected"></span>
                         <span id="connectedIp"></span>
                     </h3>
@@ -97,13 +156,39 @@
                             <h4>Danh sách Apps</h4>
                             <p>Xem ứng dụng đang chạy</p>
                         </div>
-                        <div class="action-btn" onclick="startApp()">
+                        <div class="action-btn" onclick="openAppSearchModal()">
                             <div class="icon">▶️</div>
                             <h4>Mở ứng dụng</h4>
-                            <p>Khởi chạy app mới</p>
+                            <p>Tìm kiếm và mở app</p>
                         </div>
                     </div>
                     <div id="appsList" class="list-container"></div>
+                </div>
+
+                <!-- App Search Modal -->
+                <div id="appSearchModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>🔍 Tìm kiếm ứng dụng</h3>
+                            <button class="modal-close" onclick="closeAppSearchModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="search-input-group">
+                                <input type="text" id="appSearchInput" class="search-input" 
+                                       placeholder="Nhập tên ứng dụng (VD: notepad, chrome, word)..." 
+                                       onkeyup="handleAppSearch(event)">
+                                <button class="btn-search" onclick="performAppSearch()">
+                                    <i class="fas fa-search"></i> Tìm kiếm
+                                </button>
+                            </div>
+                            <div id="appSearchResults" class="app-search-results">
+                                <div class="search-placeholder">
+                                    <div class="icon">🔍</div>
+                                    <p>Nhập tên ứng dụng và nhấn Enter hoặc nút "Tìm kiếm"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="processesTab" class="tab-content">
@@ -208,5 +293,6 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="particle.js"></script>
 </body>
 </html>

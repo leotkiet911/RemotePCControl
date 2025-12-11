@@ -4,6 +4,7 @@ let isWebcamStreaming = false;
 let frameCount = 0;
 let lastFpsUpdate = Date.now();
 let serverInfo = { ip: null, port: null };
+let isMenuOpen = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadServerInfo();
@@ -11,23 +12,61 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function selectMode(mode) {
-    document.getElementById('modeSelection').style.display = mode ? 'none' : 'grid';
-    document.getElementById('loginSection').classList.remove('active');
-    document.getElementById('controlledSection').classList.remove('active');
+    const contentOverlay = document.getElementById('contentOverlay');
+    const heroSection = document.querySelector('.hero-section');
+    const body = document.body;
+    
+    if (mode === null) {
+        // Quay lại trang chủ
+        contentOverlay.classList.remove('active');
+        body.classList.remove('overlay-active');
+        heroSection.style.display = 'flex';
+        document.getElementById('loginSection').classList.remove('active');
+        document.getElementById('controlledSection').classList.remove('active');
+        document.getElementById('controlPanel').classList.remove('active');
+    } else {
+        // Hiển thị overlay và ẩn hero
+        heroSection.style.display = 'none';
+        contentOverlay.classList.add('active');
+        body.classList.add('overlay-active');
+        document.getElementById('loginSection').classList.remove('active');
+        document.getElementById('controlledSection').classList.remove('active');
+        document.getElementById('controlPanel').classList.remove('active');
 
-    if (mode === 'controller') {
-        document.getElementById('loginSection').classList.add('active');
-    } else if (mode === 'controlled') {
-        document.getElementById('controlledSection').classList.add('active');
-        refreshSessions();
+        if (mode === 'controller') {
+            document.getElementById('loginSection').classList.add('active');
+        } else if (mode === 'controlled') {
+            document.getElementById('controlledSection').classList.add('active');
+            refreshSessions();
+        }
     }
 }
 
 function switchTab(tabName) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active');
+    
+    // Tìm tab button tương ứng và kích hoạt
+    const tabButtons = document.querySelectorAll('.tab');
+    tabButtons.forEach(btn => {
+        if (btn.textContent.includes(getTabEmoji(tabName))) {
+            btn.classList.add('active');
+        }
+    });
+    
     document.getElementById(tabName + 'Tab').classList.add('active');
+}
+
+function getTabEmoji(tabName) {
+    const emojiMap = {
+        'apps': '📱',
+        'processes': '⚙️',
+        'screen': '📸',
+        'keylog': '⌨️',
+        'webcam': '📹',
+        'system': '🔋'
+    };
+    return emojiMap[tabName] || '';
 }
 
 async function setupSignalR() {
@@ -66,7 +105,10 @@ function handleResponse(response) {
                 alert('✅ ' + data);
             }
             document.getElementById('loginSection').classList.remove('active');
+            document.getElementById('controlledSection').classList.remove('active');
             document.getElementById('controlPanel').classList.add('active');
+            // Kiểm tra task đang chờ
+            checkPendingTask();
             break;
         case 'FAILED':
             alert('❌ ' + data);
@@ -95,6 +137,9 @@ function handleResponse(response) {
             break;
         case 'SESSIONS':
             renderSessions(data);
+            break;
+        case 'SEARCH_APPS':
+            displayAppSearchResults(data);
             break;
     }
 }
@@ -214,6 +259,75 @@ function displayApps(data) {
     document.getElementById('appsList').innerHTML = html || "<p>Không có ứng dụng.</p>";
 }
 
+function displayAppSearchResults(data) {
+    const container = document.getElementById('appSearchResults');
+    
+    if (!data || data.trim() === '') {
+        container.innerHTML = `
+            <div class="search-placeholder">
+                <div class="icon">❌</div>
+                <p>Không tìm thấy ứng dụng nào</p>
+            </div>
+        `;
+        return;
+    }
+
+    const apps = data.split('||').filter(Boolean);
+    if (apps.length === 0) {
+        container.innerHTML = `
+            <div class="search-placeholder">
+                <div class="icon">❌</div>
+                <p>Không tìm thấy ứng dụng nào</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="app-results-list">';
+    apps.forEach((appStr, index) => {
+        if (appStr) {
+            const parts = appStr.split(':');
+            const appName = parts[0] || 'N/A';
+            const appPath = parts.slice(1).join(':'); // Join lại vì path có thể chứa ':'
+            
+            // Lấy tên file để hiển thị
+            const fileName = appPath.split('\\').pop() || appPath.split('/').pop() || appPath;
+            
+            // Sử dụng data attributes để tránh vấn đề escape
+            html += `
+                <div class="app-result-item" data-app-path="${escapeHtml(appPath)}" data-app-name="${escapeHtml(appName)}">
+                    <div class="app-result-icon">📱</div>
+                    <div class="app-result-info">
+                        <h4>${escapeHtml(appName)}</h4>
+                        <p>${escapeHtml(fileName)}</p>
+                    </div>
+                    <div class="app-result-action">
+                        <i class="fas fa-play"></i>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+    
+    // Thêm event listeners sau khi render
+    container.querySelectorAll('.app-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const appPath = this.getAttribute('data-app-path');
+            const appName = this.getAttribute('data-app-name');
+            startAppFromSearch(appPath, appName);
+        });
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function displayProcesses(data) {
     let html = '';
     const processes = data.split('||');
@@ -263,16 +377,80 @@ async function login() {
 
 function disconnect() {
     stopWebcamStream();
-    if (connection) connection.stop();
+    if (connection) {
+        connection.stop();
+        connection = null;
+    }
     targetIp = null;
     document.getElementById('controlPanel').classList.remove('active');
+    // Xóa pending task khi ngắt kết nối
+    sessionStorage.removeItem('pendingTask');
     selectMode(null);
 }
 
 function listApplications() { sendCommand('LIST_APPS'); }
+
+function openAppSearchModal() {
+    const modal = document.getElementById('appSearchModal');
+    modal.classList.add('active');
+    document.getElementById('appSearchInput').focus();
+    
+    // Đóng modal khi click bên ngoài
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeAppSearchModal();
+        }
+    });
+}
+
+function closeAppSearchModal() {
+    document.getElementById('appSearchModal').classList.remove('active');
+    document.getElementById('appSearchInput').value = '';
+    document.getElementById('appSearchResults').innerHTML = `
+        <div class="search-placeholder">
+            <div class="icon">🔍</div>
+            <p>Nhập tên ứng dụng và nhấn Enter hoặc nút "Tìm kiếm"</p>
+        </div>
+    `;
+}
+
+function handleAppSearch(event) {
+    if (event.key === 'Enter') {
+        performAppSearch();
+    }
+}
+
+function performAppSearch() {
+    const searchQuery = document.getElementById('appSearchInput').value.trim();
+    if (!searchQuery) {
+        alert('Vui lòng nhập tên ứng dụng!');
+        return;
+    }
+
+    // Hiển thị loading
+    document.getElementById('appSearchResults').innerHTML = `
+        <div class="search-loading">
+            <div class="spinner"></div>
+            <p>Đang tìm kiếm...</p>
+        </div>
+    `;
+
+    // Gửi lệnh tìm kiếm
+    sendCommand('SEARCH_APPS', searchQuery);
+}
+
 function startApp() {
     const path = prompt('Đường dẫn (VD: notepad.exe):');
     if (path) sendCommand('START_APP', path);
+}
+
+function startAppFromSearch(appPath, appName) {
+    sendCommand('START_APP', appPath);
+    closeAppSearchModal();
+    // Hiển thị thông báo
+    setTimeout(() => {
+        alert(`Đã khởi chạy: ${appName}`);
+    }, 500);
 }
 function stopApp(id) {
     if (confirm('Dừng app?')) sendCommand('STOP_APP', id);
@@ -341,4 +519,61 @@ function shutdownPC() {
 }
 function restartPC() {
     if (confirm('⚠️ RESTART?')) sendCommand('RESTART');
+}
+
+function toggleMenu() {
+    const menu = document.getElementById('menuDropdown');
+    isMenuOpen = !isMenuOpen;
+    if (isMenuOpen) {
+        menu.classList.add('active');
+    } else {
+        menu.classList.remove('active');
+    }
+}
+
+function navigateToTask(taskName) {
+    // Đóng menu
+    isMenuOpen = false;
+    document.getElementById('menuDropdown').classList.remove('active');
+    
+    // Kiểm tra đăng nhập - kiểm tra cả targetIp và connection
+    if (!targetIp || !connection || connection.state !== "Connected") {
+        // Chưa đăng nhập, hiển thị form đăng nhập
+        selectMode('controller');
+        // Lưu task cần chuyển đến sau khi đăng nhập
+        sessionStorage.setItem('pendingTask', taskName);
+        // Hiển thị thông báo
+        setTimeout(() => {
+            alert('Vui lòng đăng nhập để sử dụng tính năng này!');
+        }, 100);
+        return;
+    }
+    
+    // Đã đăng nhập, chuyển đến task
+    // Đảm bảo control panel được hiển thị
+    const contentOverlay = document.getElementById('contentOverlay');
+    const heroSection = document.querySelector('.hero-section');
+    const body = document.body;
+    
+    heroSection.style.display = 'none';
+    contentOverlay.classList.add('active');
+    body.classList.add('overlay-active');
+    document.getElementById('loginSection').classList.remove('active');
+    document.getElementById('controlledSection').classList.remove('active');
+    document.getElementById('controlPanel').classList.add('active');
+    
+    // Chuyển đến tab tương ứng
+    switchTab(taskName);
+}
+
+// Kiểm tra task đang chờ sau khi đăng nhập thành công
+function checkPendingTask() {
+    const pendingTask = sessionStorage.getItem('pendingTask');
+    if (pendingTask) {
+        sessionStorage.removeItem('pendingTask');
+        // Đợi một chút để control panel hiển thị
+        setTimeout(() => {
+            switchTab(pendingTask);
+        }, 300);
+    }
 }

@@ -163,6 +163,8 @@ namespace RemotePCControl
                 {
                     case "LIST_APPS":
                         return ListApplications();
+                    case "SEARCH_APPS":
+                        return SearchApplications(parameters);
                     case "START_APP":
                         return StartApplication(parameters);
                     case "STOP_APP":
@@ -215,10 +217,147 @@ namespace RemotePCControl
             return $"APPS|{string.Join("||", apps)}";
         }
 
+        private string SearchApplications(string searchQuery)
+        {
+            try
+            {
+                var results = new List<string>();
+                string searchLower = searchQuery.ToLower();
+
+                // Tìm trong Start Menu shortcuts
+                string startMenuPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
+                SearchInDirectory(startMenuPath, searchLower, results);
+
+                // Tìm trong Common Start Menu
+                string commonStartMenu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs");
+                SearchInDirectory(commonStartMenu, searchLower, results);
+
+                // Tìm trong Program Files
+                string[] programFilesPaths = {
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
+                };
+
+                foreach (var programFilesPath in programFilesPaths)
+                {
+                    if (Directory.Exists(programFilesPath))
+                    {
+                        SearchInDirectory(programFilesPath, searchLower, results, maxDepth: 2);
+                    }
+                }
+
+                // Tìm trong PATH environment
+                string pathEnv = Environment.GetEnvironmentVariable("PATH");
+                if (!string.IsNullOrEmpty(pathEnv))
+                {
+                    foreach (var path in pathEnv.Split(Path.PathSeparator))
+                    {
+                        if (Directory.Exists(path))
+                        {
+                            try
+                            {
+                                var exeFiles = Directory.GetFiles(path, "*.exe", SearchOption.TopDirectoryOnly);
+                                foreach (var exe in exeFiles)
+                                {
+                                    string fileName = Path.GetFileNameWithoutExtension(exe).ToLower();
+                                    if (fileName.Contains(searchLower))
+                                    {
+                                        string displayName = Path.GetFileName(exe);
+                                        if (!results.Contains($"{displayName}:{exe}"))
+                                        {
+                                            results.Add($"{displayName}:{exe}");
+                                        }
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+
+                // Giới hạn kết quả
+                var limitedResults = results.Take(50).ToList();
+                return $"SEARCH_APPS|{string.Join("||", limitedResults)}";
+            }
+            catch (Exception ex)
+            {
+                return $"ERROR|Search failed: {ex.Message}";
+            }
+        }
+
+        private void SearchInDirectory(string directory, string searchQuery, List<string> results, int maxDepth = 3, int currentDepth = 0)
+        {
+            if (currentDepth >= maxDepth || !Directory.Exists(directory)) return;
+
+            try
+            {
+                // Tìm .lnk files (shortcuts)
+                var lnkFiles = Directory.GetFiles(directory, "*.lnk", SearchOption.TopDirectoryOnly);
+                foreach (var lnk in lnkFiles)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(lnk).ToLower();
+                    if (fileName.Contains(searchQuery))
+                    {
+                        string displayName = Path.GetFileNameWithoutExtension(lnk);
+                        if (!results.Any(r => r.StartsWith($"{displayName}:")))
+                        {
+                            results.Add($"{displayName}:{lnk}");
+                        }
+                    }
+                }
+
+                // Tìm .exe files
+                var exeFiles = Directory.GetFiles(directory, "*.exe", SearchOption.TopDirectoryOnly);
+                foreach (var exe in exeFiles)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(exe).ToLower();
+                    if (fileName.Contains(searchQuery))
+                    {
+                        string displayName = Path.GetFileNameWithoutExtension(exe);
+                        if (!results.Any(r => r.StartsWith($"{displayName}:")))
+                        {
+                            results.Add($"{displayName}:{exe}");
+                        }
+                    }
+                }
+
+                // Tìm trong subdirectories
+                if (currentDepth < maxDepth - 1)
+                {
+                    var subDirs = Directory.GetDirectories(directory);
+                    foreach (var subDir in subDirs)
+                    {
+                        SearchInDirectory(subDir, searchQuery, results, maxDepth, currentDepth + 1);
+                    }
+                }
+            }
+            catch { }
+        }
+
         private string StartApplication(string appPath)
         {
-            Process.Start(appPath);
-            return $"SUCCESS|Started {appPath}";
+            try
+            {
+                // Nếu là .lnk file, cần resolve shortcut
+                if (appPath.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Sử dụng shell để mở shortcut
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = appPath,
+                        UseShellExecute = true
+                    });
+                }
+                else
+                {
+                    Process.Start(appPath);
+                }
+                return $"SUCCESS|Started {appPath}";
+            }
+            catch (Exception ex)
+            {
+                return $"ERROR|Failed to start: {ex.Message}";
+            }
         }
 
         private string StopApplication(string processIdStr)
