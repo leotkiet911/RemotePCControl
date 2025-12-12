@@ -362,9 +362,10 @@ async function login() {
     const password = document.getElementById('loginPassword').value;
 
     if (!ip || !password) {
-    document.getElementById('loginError').textContent = "Vui lòng nhập đầy đủ thông tin!";
-    return;
-}
+        document.getElementById('loginError').textContent = "Vui lòng nhập đầy đủ thông tin!";
+        document.getElementById('loginError').style.display = "block";
+        return;
+    }
 
 
     await setupSignalR();
@@ -377,8 +378,14 @@ async function login() {
    
 }
 
-function disconnect() {
-    stopWebcamStream();
+async function disconnect() {
+    // Dừng webcam streaming nếu đang chạy
+    if (isWebcamStreaming) {
+        await stopWebcamStream();
+        await new Promise(resolve => setTimeout(resolve, 200));
+        sendCommand('WEBCAM_OFF');
+    }
+    
     if (connection) {
         connection.stop();
         connection = null;
@@ -494,12 +501,31 @@ function startWebcam() {
 function captureWebcam() {
     sendCommand('WEBCAM_CAPTURE');
 }
-function stopWebcam() {
-        stopWebcamStream();
-        sendCommand('WEBCAM_OFF');
-        document.getElementById('webcamContainer').innerHTML =
-            '<div class="webcam-placeholder"><div class="icon">📹</div><h3>Webcam đã tắt</h3></div>';
-        document.getElementById('webcamSnapshots').innerHTML = '';   
+function stopWebcamStream() {
+    if (isWebcamStreaming) {
+        isWebcamStreaming = false;
+        if (connection && connection.state === "Connected") {
+            return connection.invoke("SendCommandToServer", "WEBCAM_STREAM_STOP", targetIp, "")
+                .catch(err => console.error(err));
+        }
+    }
+    return Promise.resolve();
+}
+
+async function stopWebcam() {
+    // Dừng streaming trước
+    await stopWebcamStream();
+    
+    // Đợi một chút để đảm bảo streaming đã dừng hoàn toàn
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Sau đó mới tắt webcam
+    sendCommand('WEBCAM_OFF');
+    
+    // Cập nhật UI
+    document.getElementById('webcamContainer').innerHTML =
+        '<div class="webcam-placeholder"><div class="icon">📹</div><h3>Webcam đã tắt</h3></div>';
+    document.getElementById('webcamSnapshots').innerHTML = '';   
 }
 
 function shutdownPC() {

@@ -1,16 +1,15 @@
-﻿* {
+﻿:root {
+    --text-white: #ffffff;
+    --text-gray: #999999;
+    --accent-green: #4ade80;
+    --darker-bg: #0a0a0a;
+}
+
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-
-:root {You know, I think I'll go by that. Something. 
-    --dark-bg: #1a1a1a;At Hello OK Hello applause. 
-    --darker-bg: #0f0f0f;
-    --accent-green: #4ade80;
-    --text-white: #ffffff;
-    --text-gray: #a0a0a0;
-}Hey, Cortana. 
 
 body {
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
