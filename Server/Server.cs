@@ -45,12 +45,11 @@ namespace RemotePCControl
                 acceptThread.IsBackground = true;
                 acceptThread.Start();
 
-                // Start UDP listener for streaming
                 udpStreamListener = new UdpClient(UdpStreamPort);
                 Console.WriteLine($"[SERVER][UDP] Listening for stream packets on UDP port {UdpStreamPort}");
 
-                _ = Task.Run(UdpReceiveLoop);   // async / non-blocking
-                _ = Task.Run(UdpPingLoop);      // periodic ping to measure RTT
+                _ = Task.Run(UdpReceiveLoop);
+                _ = Task.Run(UdpPingLoop);
 
                 Thread statsThread = new Thread(DisplayStats);
                 statsThread.IsBackground = true;
@@ -228,6 +227,16 @@ namespace RemotePCControl
 
                             lock (lockObj)
                             {
+                                if (sessions.ContainsKey(targetIp))
+                                {
+                                    sessions[targetIp].ControllerClient = client;
+                                    Console.WriteLine($"[SERVER] Set ControllerClient for session {targetIp}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"[SERVER] Warning: Session {targetIp} not found when processing COMMAND");
+                                }
+
                                 if (sessions.ContainsKey(targetIp) && sessions[targetIp].ControlledClient != null)
                                 {
                                     var targetClient = sessions[targetIp].ControlledClient;
@@ -244,6 +253,16 @@ namespace RemotePCControl
                                     {
                                         streamStats[targetIp].IsStreaming = false;
                                         Console.WriteLine($"[WEBCAM] Stream stopped for {targetIp}");
+                                    }
+                                    else if (actualCommand == "WEBCAM_ON")
+                                    {
+                                        if (!streamStats.ContainsKey(targetIp))
+                                        {
+                                            streamStats[targetIp] = new StreamStats();
+                                        }
+                                        streamStats[targetIp].IsStreaming = true;
+                                        streamStats[targetIp].StartTime = DateTime.Now;
+                                        Console.WriteLine($"[WEBCAM] Webcam ON for {targetIp}, streaming auto-started");
                                     }
                                     else
                                     {
@@ -334,7 +353,7 @@ namespace RemotePCControl
                     byte[] buffer = result.Buffer;
 
                     if (buffer.Length < 24)
-                        continue; // at least header size
+                        continue;
 
                     int frameId = BitConverter.ToInt32(buffer, 0);
                     short packetIndex = BitConverter.ToInt16(buffer, 4);
@@ -350,13 +369,12 @@ namespace RemotePCControl
                     }
                     else if (packetType == 2)
                     {
-                        // PONG response for a PING -> update RTT
                         HandleUdpPong(remoteIp, frameId, timestampMs);
                     }
                 }
                 catch (ObjectDisposedException)
                 {
-                    break; // socket closed when Stop() is called
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -378,18 +396,46 @@ namespace RemotePCControl
             if (packetIndex < 0 || packetIndex >= totalPackets || totalPackets <= 0)
                 return;
 
-            string logicalIp = remoteIp; // by default use remote IP as session key
+            string? logicalIp = null;
 
             lock (lockObj)
             {
-                if (!sessions.ContainsKey(logicalIp))
+                foreach (var session in sessions)
                 {
-                    // If physical IP differs from logical IP we could map here in the future.
-                    // For now: drop the frame if there is no matching session.
+                    if (session.Value.ControlledClient != null &&
+                        session.Value.ControlledClient.RemoteEndPoint != null)
+                    {
+                        string tcpClientIp = session.Value.ControlledClient.RemoteEndPoint.Split(':')[0];
+                        if (tcpClientIp == remoteIp)
+                        {
+                            logicalIp = session.Key;
+                            break;
+                        }
+                    }
+                }
+
+                if (logicalIp == null && sessions.ContainsKey(remoteIp))
+                {
+                    logicalIp = remoteIp;
+                }
+
+                if (logicalIp == null || !sessions.ContainsKey(logicalIp))
+                {
+                    if (frameId % 100 == 0)
+                    {
+                        var availableIps = sessions.Keys.ToList();
+                        var controlledClientIps = sessions.Values
+                            .Where(s => s.ControlledClient != null && s.ControlledClient.RemoteEndPoint != null)
+                            .Select(s => s.ControlledClient.RemoteEndPoint.Split(':')[0])
+                            .ToList();
+
+                        Console.WriteLine($"[UDP] Frame dropped: No session found for UDP remote IP {remoteIp}.");
+                        Console.WriteLine($"[UDP] Available session keys: {string.Join(", ", availableIps)}");
+                        Console.WriteLine($"[UDP] ControlledClient IPs: {string.Join(", ", controlledClientIps)}");
+                    }
                     return;
                 }
 
-                // Remember real UDP endpoint (IP + Port) of client so we can send ping packets
                 udpClientEndpoints[logicalIp] = remoteEndPoint;
 
                 if (!udpFrameBuffers.TryGetValue(logicalIp, out var framesForClient))
@@ -413,7 +459,6 @@ namespace RemotePCControl
                     framesForClient[frameId] = frameBuffer;
                 }
 
-                // Copy packet payload into frame buffer
                 int payloadSize = buffer.Length - payloadOffset;
                 if (payloadSize <= 0) return;
 
@@ -425,10 +470,8 @@ namespace RemotePCControl
                     frameBuffer.ReceivedCount++;
                 }
 
-                // Check timeout for all old frames
                 CleanupOldFramesLocked(logicalIp, framesForClient);
 
-                // If we have all packets -> assemble frame
                 if (frameBuffer.ReceivedCount == frameBuffer.TotalPackets)
                 {
                     AssembleAndForwardFrameLocked(logicalIp, frameBuffer);
@@ -442,7 +485,7 @@ namespace RemotePCControl
         /// </summary>
         private void CleanupOldFramesLocked(string ip, Dictionary<int, UdpFrameBuffer> framesForClient)
         {
-            const int frameTimeoutMs = 200; // 200 ms timeout per frame
+            const int frameTimeoutMs = 200;
             var now = DateTime.Now;
             var toRemove = new List<int>();
 
@@ -451,12 +494,9 @@ namespace RemotePCControl
                 var f = kv.Value;
                 if ((now - f.FirstPacketTime).TotalMilliseconds > frameTimeoutMs)
                 {
-                    // Frame timed out -> compute a packet-loss sample and drop it
                     if (streamStats.TryGetValue(ip, out var stats))
                     {
-                        // Use Math.Max with int cast to avoid ambiguous overload (short vs int)
                         double loss = 1.0 - (double)f.ReceivedCount / Math.Max(1, (int)f.TotalPackets);
-                        // Simple exponential moving average
                         stats.AvgPacketLossPercent = stats.AvgPacketLossPercent * 0.9 + loss * 100 * 0.1;
                         stats.LastFrameTotalPackets = f.TotalPackets;
                         stats.LastFrameReceivedPackets = f.ReceivedCount;
@@ -491,8 +531,17 @@ namespace RemotePCControl
 
             string base64 = Convert.ToBase64String(fullFrame);
 
-            if (!sessions.ContainsKey(ip) || sessions[ip].ControllerClient == null)
+            if (!sessions.ContainsKey(ip))
+            {
+                Console.WriteLine($"[UDP] Frame dropped: No session found for IP {ip}");
                 return;
+            }
+
+            if (sessions[ip].ControllerClient == null)
+            {
+                Console.WriteLine($"[UDP] Frame dropped: No ControllerClient for IP {ip}");
+                return;
+            }
 
             var controllerClient = sessions[ip].ControllerClient;
             var stats = streamStats.ContainsKey(ip) ? streamStats[ip] : null;
@@ -504,7 +553,6 @@ namespace RemotePCControl
                 stats.LastFrameTotalPackets = frame.TotalPackets;
                 stats.LastFrameReceivedPackets = frame.ReceivedCount;
 
-                // Full frame -> packet loss approximated as 0 for this sample
                 double loss = 0;
                 stats.AvgPacketLossPercent = stats.AvgPacketLossPercent * 0.9 + loss * 100 * 0.1;
             }
@@ -512,22 +560,24 @@ namespace RemotePCControl
             double pingMs = stats?.AvgPingMs ?? -1;
             double lossPercent = stats?.AvgPacketLossPercent ?? -1;
 
-            // Format: RESPONSE|WEBCAM_FRAME|{base64}|{pingMs}|{lossPercent}
-            // (keep legacy convention: RESPONSE|<Type>|data...)
             string data = $"RESPONSE|WEBCAM_FRAME|{base64}|{pingMs:F1}|{lossPercent:F1}";
             try
             {
                 SendResponse(controllerClient.TcpClient.GetStream(), data);
+
+                if (stats != null && stats.FramesForwarded % 30 == 0)
+                {
+                    Console.WriteLine($"[UDP] Forwarded {stats.FramesForwarded} frames to controller for {ip}");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ERROR][UDP] Forward frame: {ex.Message}");
+                Console.WriteLine($"[ERROR][UDP] Forward frame to {ip}: {ex.Message}");
             }
         }
 
         // ==================== UDP PING ====================
 
-        // Store information about pending pings: key = ip, value = (pingId, sendTime)
         private readonly Dictionary<string, (int frameId, DateTime sendTime)> udpPingStates
             = new Dictionary<string, (int frameId, DateTime sendTime)>();
 
@@ -560,14 +610,10 @@ namespace RemotePCControl
                             long timestampMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
                             byte[] packet = new byte[24];
-                            // frame_id reused as ping_id
                             Array.Copy(BitConverter.GetBytes(pingId), 0, packet, 0, 4);
-                            // packet_index = 0, total_packets = 1
                             Array.Copy(BitConverter.GetBytes((short)0), 0, packet, 4, 2);
                             Array.Copy(BitConverter.GetBytes((short)1), 0, packet, 6, 2);
-                            // timestamp_ms
                             Array.Copy(BitConverter.GetBytes(timestampMs), 0, packet, 8, 8);
-                            // packet_type = 1 (PING)
                             packet[16] = 1;
 
                             udpStreamListener.Send(packet, packet.Length, endpoint);
@@ -604,7 +650,6 @@ namespace RemotePCControl
                     }
                     else
                     {
-                        // Simple exponential moving average
                         stats.AvgPingMs = stats.AvgPingMs * 0.8 + rttMs * 0.2;
                     }
                 }
@@ -727,10 +772,8 @@ namespace RemotePCControl
         public int FramesForwarded { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime LastFrameTime { get; set; }
-
-        // Network quality statistics
-        public double AvgPingMs { get; set; } = 0;          // Average RTT (ms)
-        public double AvgPacketLossPercent { get; set; } = 0; // Average packet loss (%)
+        public double AvgPingMs { get; set; } = 0;
+        public double AvgPacketLossPercent { get; set; } = 0;
         public int LastFrameTotalPackets { get; set; }
         public int LastFrameReceivedPackets { get; set; }
     }

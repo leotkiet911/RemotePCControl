@@ -107,7 +107,6 @@ function handleResponse(response) {
             document.getElementById('loginSection').classList.remove('active');
             document.getElementById('controlledSection').classList.remove('active');
             document.getElementById('controlPanel').classList.add('active');
-            // Kiểm tra task đang chờ
             checkPendingTask();
             break;
         case 'FAILED':
@@ -125,7 +124,6 @@ function handleResponse(response) {
             addWebcamSnapshot(data);
             break;
         case 'WEBCAM_FRAME': {
-            // Format từ server: RESPONSE|WEBCAM_FRAME|{base64}|{pingMs}|{lossPercent}
             const base64 = parts[2] || '';
             const pingMs = parseFloat(parts[3] || '-1');
             const lossPercent = parseFloat(parts[4] || '-1');
@@ -305,12 +303,9 @@ function displayAppSearchResults(data) {
         if (appStr) {
             const parts = appStr.split(':');
             const appName = parts[0] || 'N/A';
-            const appPath = parts.slice(1).join(':'); // Join lại vì path có thể chứa ':'
+            const appPath = parts.slice(1).join(':');
             
-            // Lấy tên file để hiển thị
             const fileName = appPath.split('\\').pop() || appPath.split('/').pop() || appPath;
-            
-            // Sử dụng data attributes để tránh vấn đề escape
             html += `
                 <div class="app-result-item" data-app-path="${escapeHtml(appPath)}" data-app-name="${escapeHtml(appName)}">
                     <div class="app-result-icon">📱</div>
@@ -329,7 +324,6 @@ function displayAppSearchResults(data) {
     
     container.innerHTML = html;
     
-    // Thêm event listeners sau khi render
     container.querySelectorAll('.app-result-item').forEach(item => {
         item.addEventListener('click', function() {
             const appPath = this.getAttribute('data-app-path');
@@ -394,12 +388,9 @@ async function login() {
    
 }
 
-async function disconnect() {
-    // Dừng webcam streaming nếu đang chạy
+function disconnect() {
     if (isWebcamStreaming) {
-        await stopWebcamStream();
-        await new Promise(resolve => setTimeout(resolve, 200));
-        sendCommand('WEBCAM_OFF');
+        stopWebcam();
     }
     
     if (connection) {
@@ -408,7 +399,6 @@ async function disconnect() {
     }
     targetIp = null;
     document.getElementById('controlPanel').classList.remove('active');
-    // Xóa pending task khi ngắt kết nối
     sessionStorage.removeItem('pendingTask');
     selectMode(null);
 }
@@ -452,7 +442,6 @@ function performAppSearch() {
         return;
     }
 
-    // Hiển thị loading
     document.getElementById('appSearchResults').innerHTML = `
         <div class="search-loading">
             <div class="spinner"></div>
@@ -460,7 +449,6 @@ function performAppSearch() {
         </div>
     `;
 
-    // Gửi lệnh tìm kiếm
     sendCommand('SEARCH_APPS', searchQuery);
 }
 
@@ -472,7 +460,6 @@ function startApp() {
 function startAppFromSearch(appPath, appName) {
     sendCommand('START_APP', appPath);
     closeAppSearchModal();
-    // Hiển thị thông báo
     setTimeout(() => {
         alert(`Đã khởi chạy: ${appName}`);
     }, 500);
@@ -501,15 +488,16 @@ function clearKeylogs() {
 }
 
 function startWebcam() {
-    sendCommand('WEBCAM_ON');// web cam on trc
-    document.getElementById('webcamContainer').innerHTML =
-        '<div class="webcam-placeholder"><div class="icon">📹</div><h3>Đang khởi động...</h3></div>';
-
-     if (isWebcamStreaming) {
+    if (isWebcamStreaming) {
         alert('Stream đang chạy!');
         return;
     }
-    sendCommand('WEBCAM_STREAM_START');
+    
+    document.getElementById('webcamContainer').innerHTML =
+        '<div class="webcam-placeholder"><div class="icon">📹</div><h3>Đang khởi động webcam và streaming...</h3></div>';
+    
+    sendCommand('WEBCAM_ON');
+    
     isWebcamStreaming = true;
     frameCount = 0;
     lastFpsUpdate = Date.now();
@@ -517,28 +505,12 @@ function startWebcam() {
 function captureWebcam() {
     sendCommand('WEBCAM_CAPTURE');
 }
-function stopWebcamStream() {
-    if (isWebcamStreaming) {
-        isWebcamStreaming = false;
-        if (connection && connection.state === "Connected") {
-            return connection.invoke("SendCommandToServer", "WEBCAM_STREAM_STOP", targetIp, "")
-                .catch(err => console.error(err));
-        }
-    }
-    return Promise.resolve();
-}
 
-async function stopWebcam() {
-    // Dừng streaming trước
-    await stopWebcamStream();
-    
-    // Đợi một chút để đảm bảo streaming đã dừng hoàn toàn
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Sau đó mới tắt webcam
+function stopWebcam() {
     sendCommand('WEBCAM_OFF');
     
-    // Cập nhật UI
+    isWebcamStreaming = false;
+    
     document.getElementById('webcamContainer').innerHTML =
         '<div class="webcam-placeholder"><div class="icon">📹</div><h3>Webcam đã tắt</h3></div>';
     document.getElementById('webcamSnapshots').innerHTML = '';   
@@ -562,25 +534,17 @@ function toggleMenu() {
 }
 
 function navigateToTask(taskName) {
-    // Đóng menu
     isMenuOpen = false;
     document.getElementById('menuDropdown').classList.remove('active');
     
-    // Kiểm tra đăng nhập - kiểm tra cả targetIp và connection
     if (!targetIp || !connection || connection.state !== "Connected") {
-        // Chưa đăng nhập, hiển thị form đăng nhập
         selectMode('controller');
-        // Lưu task cần chuyển đến sau khi đăng nhập
         sessionStorage.setItem('pendingTask', taskName);
-        // Hiển thị thông báo
         setTimeout(() => {
             alert('Vui lòng đăng nhập để sử dụng tính năng này!');
         }, 100);
         return;
     }
-    
-    // Đã đăng nhập, chuyển đến task
-    // Đảm bảo control panel được hiển thị
     const contentOverlay = document.getElementById('contentOverlay');
     const heroSection = document.querySelector('.hero-section');
     const body = document.body;

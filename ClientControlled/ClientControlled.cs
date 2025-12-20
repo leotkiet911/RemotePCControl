@@ -32,10 +32,9 @@ namespace RemotePCControl
         private UdpClient udpClient;
         private IPEndPoint udpServerEndPoint;
 
-        // UDP streaming config
-        private const int UdpStreamPort = 9999;      // UDP port that the Server listens on
-        private const int UdpMaxPayload = 1400;      // Max payload per packet (avoid MTU fragmentation)
-        private int currentFrameId = 0;              // Incremented for every sent frame
+        private const int UdpStreamPort = 9999;
+        private const int UdpMaxPayload = 1400;
+        private int currentFrameId = 0;
 
         // ==================== UDP PROTOCOL ====================
         //
@@ -102,14 +101,9 @@ namespace RemotePCControl
                 stream = client.GetStream();
                 isRunning = true;
 
-                // Initialize UDP client for streaming.
-                // We do not bind to a fixed local port – the OS chooses one – but we
-                // always reuse the same socket for both send/receive so the server
-                // can ping back to this endpoint.
                 udpClient = new UdpClient();
                 udpServerEndPoint = new IPEndPoint(IPAddress.Parse(serverIp), UdpStreamPort);
 
-                // UDP receive loop for ping packets etc. (async / non-blocking)
                 _ = Task.Run(UdpReceiveLoop);
 
                 string registerMessage = $"REGISTER_CONTROLLED|{localIp}|{password}";
@@ -262,15 +256,12 @@ namespace RemotePCControl
                 var results = new List<string>();
                 string searchLower = searchQuery.ToLower();
 
-                // Tìm trong Start Menu shortcuts
                 string startMenuPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
                 SearchInDirectory(startMenuPath, searchLower, results);
 
-                // Tìm trong Common Start Menu
                 string commonStartMenu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs");
                 SearchInDirectory(commonStartMenu, searchLower, results);
 
-                // Tìm trong Program Files
                 string[] programFilesPaths = {
                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
@@ -284,7 +275,6 @@ namespace RemotePCControl
                     }
                 }
 
-                // Tìm trong PATH environment
                 string pathEnv = Environment.GetEnvironmentVariable("PATH");
                 if (!string.IsNullOrEmpty(pathEnv))
                 {
@@ -313,7 +303,6 @@ namespace RemotePCControl
                     }
                 }
 
-                // Giới hạn kết quả
                 var limitedResults = results.Take(50).ToList();
                 return $"SEARCH_APPS|{string.Join("||", limitedResults)}";
             }
@@ -329,7 +318,6 @@ namespace RemotePCControl
 
             try
             {
-                // Tìm .lnk files (shortcuts)
                 var lnkFiles = Directory.GetFiles(directory, "*.lnk", SearchOption.TopDirectoryOnly);
                 foreach (var lnk in lnkFiles)
                 {
@@ -344,7 +332,6 @@ namespace RemotePCControl
                     }
                 }
 
-                // Tìm .exe files
                 var exeFiles = Directory.GetFiles(directory, "*.exe", SearchOption.TopDirectoryOnly);
                 foreach (var exe in exeFiles)
                 {
@@ -359,7 +346,6 @@ namespace RemotePCControl
                     }
                 }
 
-                // Tìm trong subdirectories
                 if (currentDepth < maxDepth - 1)
                 {
                     var subDirs = Directory.GetDirectories(directory);
@@ -376,10 +362,8 @@ namespace RemotePCControl
         {
             try
             {
-                // Nếu là .lnk file, cần resolve shortcut
                 if (appPath.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Sử dụng shell để mở shortcut
                     Process.Start(new ProcessStartInfo
                     {
                         FileName = appPath,
@@ -513,7 +497,15 @@ namespace RemotePCControl
                 videoDevice.NewFrame += VideoDevice_NewFrame;
                 videoDevice.Start();
 
-                return $"SUCCESS|Webcam started: {bestCamera.Name}";
+                Console.WriteLine("[WEBCAM] Auto-starting streaming...");
+                Thread.Sleep(500);
+                
+                isStreamingWebcam = true;
+                Thread streamThread = new Thread(StreamWebcamFrames);
+                streamThread.IsBackground = true;
+                streamThread.Start();
+
+                return $"SUCCESS|Webcam started and streaming: {bestCamera.Name}";
             }
             catch (Exception ex)
             {
@@ -664,7 +656,6 @@ namespace RemotePCControl
                 {
                     if (TryGetWebcamFrameBytes(out byte[] frameBytes, out long timestampMs))
                     {
-                        // Gửi frame qua UDP, không dùng TCP cho streaming
                         SendFrameOverUdp(frameBytes, timestampMs);
                         framesSent++;
 
@@ -755,25 +746,16 @@ namespace RemotePCControl
                     int offset = packetIndex * UdpMaxPayload;
                     int size = Math.Min(UdpMaxPayload, frameBytes.Length - offset);
 
-                    byte[] packet = new byte[24 + size]; // header (24) + payload
+                    byte[] packet = new byte[24 + size];
 
-                    // Header layout described in UDP PROTOCOL section above
-                    // frame_id
                     Array.Copy(BitConverter.GetBytes(frameId), 0, packet, 0, 4);
-                    // packet_index
                     Array.Copy(BitConverter.GetBytes((short)packetIndex), 0, packet, 4, 2);
-                    // total_packets
                     Array.Copy(BitConverter.GetBytes((short)totalPackets), 0, packet, 6, 2);
-                    // timestamp_ms
                     Array.Copy(BitConverter.GetBytes(timestampMs), 0, packet, 8, 8);
-                    // packet_type = 0 (frame data)
                     packet[16] = 0;
-                    // 17-23 reserved (0)
 
-                    // payload
                     Buffer.BlockCopy(frameBytes, offset, packet, 24, size);
 
-                    // SendAsync non-blocking
                     await udpClient.SendAsync(packet, packet.Length, udpServerEndPoint);
                 }
             }
