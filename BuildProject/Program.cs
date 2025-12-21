@@ -113,6 +113,8 @@ internal static class Program
 
     public static string GetLocalIpAddress()
     {
+        List<string> candidateIps = new List<string>();
+
         foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
         {
             if (ni.OperationalStatus != OperationalStatus.Up)
@@ -138,20 +140,32 @@ internal static class Program
             var props = ni.GetIPProperties();
 
             // Prefer adapter that has default gateway (the one currently used for Internet)
-            if (props.GatewayAddresses.Count == 0)
-                continue;
+            bool hasGateway = props.GatewayAddresses.Count > 0;
 
             foreach (var addr in props.UnicastAddresses)
             {
                 if (addr.Address.AddressFamily == AddressFamily.InterNetwork &&
                     !IPAddress.IsLoopback(addr.Address))
                 {
-                    return addr.Address.ToString();
+                    string ipStr = addr.Address.ToString();
+
+                    // Prioritize IPs in 192.168.200.x subnet
+                    if (ipStr.StartsWith("192.168.200."))
+                    {
+                        return ipStr;
+                    }
+
+                    // Collect all valid IPs
+                    if (hasGateway)
+                    {
+                        candidateIps.Add(ipStr);
+                    }
                 }
             }
         }
 
-        return "";
+        // Return first candidate IP if found, otherwise empty string
+        return candidateIps.Count > 0 ? candidateIps[0] : "";
     }
 
 
@@ -193,6 +207,15 @@ internal static class Program
         {
             string downloadsFolder = Path.Combine(solutionRoot, "WebInterface", "wwwroot", "downloads");
             Directory.CreateDirectory(downloadsFolder);
+
+            // Copy server-info.json to publish folder so it's included in the zip
+            string serverInfoSource = Path.Combine(solutionRoot, "server-info.json");
+            if (File.Exists(serverInfoSource))
+            {
+                string serverInfoDest = Path.Combine(publishPath, "server-info.json");
+                File.Copy(serverInfoSource, serverInfoDest, overwrite: true);
+                Console.WriteLine($"  ✓ server-info.json copied to publish folder");
+            }
 
             string zipPath = Path.Combine(downloadsFolder, "client-controlled.zip");
             if (File.Exists(zipPath))

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace RemotePCControl
 {
@@ -21,23 +22,59 @@ namespace RemotePCControl
         {
             try
             {
+                string baseDir = AppContext.BaseDirectory;
                 string settingsPath = GetSettingsPath();
+                ClientSettings? settings = null;
 
-                if (!File.Exists(settingsPath))
+                // First, try to load from server-info.json if it exists (has priority)
+                string serverInfoPath = Path.Combine(baseDir, "server-info.json");
+                if (File.Exists(serverInfoPath))
                 {
-                    var defaults = new ClientSettings();
-                    Save(defaults, settingsPath);
-                    return defaults;
+                    try
+                    {
+                        string serverInfoJson = File.ReadAllText(serverInfoPath);
+                        var serverInfo = JsonSerializer.Deserialize<ServerInfo>(serverInfoJson);
+                        if (serverInfo != null && !string.IsNullOrWhiteSpace(serverInfo.Ip))
+                        {
+                            settings = new ClientSettings
+                            {
+                                ServerIp = serverInfo.Ip,
+                                ServerPort = serverInfo.Port
+                            };
+                            Console.WriteLine($"[SETTINGS] Loaded from server-info.json: {serverInfo.Ip}:{serverInfo.Port}");
+
+                            // Update clientsettings.json with the correct values
+                            Save(settings, settingsPath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[SETTINGS] Failed to load server-info.json: {ex.Message}");
+                    }
                 }
 
-                string json = File.ReadAllText(settingsPath);
-                var settings = JsonSerializer.Deserialize<ClientSettings>(json);
+                // If server-info.json not found or failed, try clientsettings.json
+                if (settings == null && File.Exists(settingsPath))
+                {
+                    try
+                    {
+                        string json = File.ReadAllText(settingsPath);
+                        settings = JsonSerializer.Deserialize<ClientSettings>(json);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[SETTINGS] Failed to load clientsettings.json: {ex.Message}");
+                    }
+                }
 
+                // If still no settings, create defaults
                 if (settings == null)
                 {
-                    throw new InvalidOperationException("Settings file could not be parsed.");
+                    settings = new ClientSettings();
+                    Save(settings, settingsPath);
                 }
 
+                // Validate and fix settings
                 if (string.IsNullOrWhiteSpace(settings.ServerIp))
                 {
                     settings.ServerIp = "127.0.0.1";
@@ -48,7 +85,20 @@ namespace RemotePCControl
                     settings.ServerPort = 8888;
                 }
 
-                ApplyEnvironmentOverrides(settings);
+                // DO NOT apply environment overrides if we loaded from file
+                // Environment variables may contain old/incorrect values (e.g., client's own IP)
+                // File-based settings (server-info.json or clientsettings.json) have the correct server IP
+                // Only apply environment overrides if no file was found
+                bool loadedFromFile = File.Exists(serverInfoPath) || File.Exists(settingsPath);
+                if (!loadedFromFile)
+                {
+                    Console.WriteLine("[SETTINGS] No settings file found, checking environment variables...");
+                    ApplyEnvironmentOverrides(settings);
+                }
+                else
+                {
+                    Console.WriteLine("[SETTINGS] Settings loaded from file, skipping environment variable overrides");
+                }
 
                 return settings;
             }
@@ -57,6 +107,16 @@ namespace RemotePCControl
                 Console.WriteLine($"[SETTINGS] Failed to load settings: {ex.Message}. Using defaults.");
                 return new ClientSettings();
             }
+        }
+
+        // Helper class for deserializing server-info.json
+        private class ServerInfo
+        {
+            [JsonPropertyName("Ip")]
+            public string Ip { get; set; } = "";
+
+            [JsonPropertyName("Port")]
+            public int Port { get; set; } = 8888;
         }
 
         private static void ApplyEnvironmentOverrides(ClientSettings settings)
@@ -87,7 +147,7 @@ namespace RemotePCControl
         {
             try
             {
-                string directory = Path.GetDirectoryName(path);
+                string? directory = Path.GetDirectoryName(path);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
                     Directory.CreateDirectory(directory);
@@ -105,7 +165,8 @@ namespace RemotePCControl
         private static string GetSettingsPath()
         {
             string baseDir = AppContext.BaseDirectory;
-            return Path.Combine(baseDir, "clientsettings.json");
+            string? combined = Path.Combine(baseDir, "clientsettings.json");
+            return combined ?? Path.Combine(Environment.CurrentDirectory, "clientsettings.json");
         }
     }
 }
